@@ -160,3 +160,11 @@ export const connectToGoogle = async (id, data) => {
 export const connectToFacebook = async (id, data) => {
   return db.User.update({ facebookConnection: data }, { where: { id } })
 }
+
+export const disconnectGoogle = async (userId) => {
+  return db.User.update({ googleConnection: null }, { where: { id: userId } })
+}
+
+export const disconnectFacebook = async (userId) => {
+  return db.User.update({ facebookConnection: null }, { where: { id: userId } })
+}
