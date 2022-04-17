@@ -17,6 +17,7 @@ export async function register(req, res) {
 }
 
 export async function login(req, res, next) {
+  debug.log('asfs', 'sfsf')
   await passport.authenticate('local', { session: false }, function (err, user, info) {
     if (err) {
       return next(err)

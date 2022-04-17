@@ -1,5 +1,6 @@
 import { get } from 'lodash'
 import { REDIS_SERVICE_KEY } from 'src/shared/constant'
+import { QUEUE_NAME } from 'src/shared/redis-service-key'
 import debug from 'src/utils/debug'
 import { consumer, createMessage, producer, REDIS_NAMESPACE } from '.'
 import * as userService from '../users/user.service'
@@ -24,7 +25,7 @@ const messageHandler = (message, ack) => {
 }
 
 export const initAdConsumers = () => {
-  consumer.consume(REDIS_SERVICE_KEY.ADS_SERVICE, false, messageHandler, (err, isRunning) => {
+  consumer.consume(QUEUE_NAME.ADS_USERS_QUEUE, false, messageHandler, (err, isRunning) => {
     if (err) debug.log(REDIS_NAMESPACE, err)
     // the message handler will be started only if the consumer is running
     else
@@ -37,7 +38,7 @@ export const initAdConsumers = () => {
 
 // Producers sections
 const createAdsMessage = (type, data) => {
-  return createMessage(REDIS_SERVICE_KEY.ADS_SERVICE, type, data)
+  return createMessage(QUEUE_NAME.USERS_ADS_QUEUE, type, data)
 }
 
 export const sendUpdateConnectToFacebook = async (data) => {
