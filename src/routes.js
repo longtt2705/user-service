@@ -4,7 +4,7 @@ import userRouter from 'src/modules/users/user.route'
 
 const router = Router()
 
-router.use('/', userRouter)
 router.use('/auth', authRouter)
+router.use('/', userRouter)
 
 export default router

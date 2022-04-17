@@ -1,6 +1,7 @@
 import { body } from 'express-validator'
 
 export const userRegisterRules = () => {
+  console.log('>>>>>>user rules')
   return [
     body('email').isEmail().withMessage('invalid email'),
     body('username').exists({ checkFalsy: true }).withMessage('username is required'),

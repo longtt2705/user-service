@@ -8,6 +8,7 @@ import debug from 'src/utils/debug'
 import { sendMailWithHtml } from 'src/utils/mailer'
 
 export async function register(req, res) {
+  console.log('register>>>')
   const userInfo = { ...req.body }
   const [user, errors] = await userService.createUser(userInfo)
   if (!isEmpty(errors)) {
@@ -17,6 +18,7 @@ export async function register(req, res) {
 }
 
 export async function login(req, res, next) {
+  console.log('>>>>>login')
   await passport.authenticate('local', { session: false }, function (err, user, info) {
     if (err) {
       return next(err)
