@@ -97,3 +97,25 @@ export const connectToFacebook = async (req, res) => {
     res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
   }
 }
+
+export const disconnectGoogle = async (req, res) => {
+  const user = req.user
+
+  await userService.disconnectGoogle(user.id).catch((err) => {
+    debug.log('Disconnect-Google-Account', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
+  })
+
+  res.status(StatusCodes.OK).json({ message: 'disconnect google account successfully' })
+}
+
+export const disconnectFacebook = async (req, res) => {
+  const user = req.user
+
+  await userService.disconnectFacebook(user.id).catch((err) => {
+    debug.log('Disconnect-Facebook-Account', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
+  })
+
+  res.status(StatusCodes.OK).json({ message: 'disconnect facebook account successfully.' })
+}

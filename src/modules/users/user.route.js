@@ -15,5 +15,7 @@ router.put('/:userId', userController.updateUser)
 router.post('/change-password', changePasswordRules(), validate, userController.changePassword)
 router.post('/connect/google', userController.connectToGoogle)
 router.post('/connect/facebook', userController.connectToFacebook)
+router.post('/disconnect/google', userController.disconnectGoogle)
+router.post('/disconnect/facebook', userController.disconnectFacebook)
 
 export default router
