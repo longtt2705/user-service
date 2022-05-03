@@ -42,6 +42,13 @@ export default (sequelize, DataTypes) => {
     tiktokConnection: {
       type: DataTypes.JSON,
     },
+    orgId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Organizations',
+        key: 'id',
+      },
+    },
     createdAt: {
       allowNull: false,
       type: DataTypes.DATE,

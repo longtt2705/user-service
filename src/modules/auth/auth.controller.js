@@ -55,7 +55,7 @@ export const forgotPassword = async (req, res) => {
   if (forgotPasswordUser) {
     const origin = req.get('origin') || process.env.DEFAULT_CLIENT_HOST
     const token = userService.signForgetPasswordToken(email)
-    const resetLink = `${origin}/reset-password?token=${token}`
+    const resetLink = `${origin}/auth/reset-password?token=${token}`
     const htmlContent = `<b>Click this link to reset your password: ${resetLink}</b>`
     sendMailWithHtml('Forgot password', email, htmlContent)
     return res.json({ message: `An email was sent to ${email}` })
