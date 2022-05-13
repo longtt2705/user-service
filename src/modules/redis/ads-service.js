@@ -4,6 +4,7 @@ import { QUEUE_NAME } from 'src/shared/redis-service-key'
 import debug from 'src/utils/debug'
 import { consumer, createMessage, producer, REDIS_NAMESPACE } from '.'
 import * as userService from '../users/user.service'
+import { createNotification } from './notification-service'
 const ADS_SERVICE = REDIS_SERVICE_KEY.MESSAGE.ADS_SERVICE
 
 // Consumers sections
@@ -71,53 +72,76 @@ export const sendUpdateConnectToGoogle = async (data) => {
 }
 
 export const updateConnectToFacebook = async (data) => {
-  const { user, fbUserId, longLiveAccessToken, adAccounts, name, picture } = data
-  await userService.connectToFacebook(user.id, {
-    userId: fbUserId,
-    accessToken: longLiveAccessToken,
-    adAccounts,
-    information: {
-      name,
-      picture,
-    },
-  })
+  try {
+    const { user, fbUserId, longLiveAccessToken, adAccounts, name, picture } = data
+    await userService.connectToFacebook(user.id, {
+      userId: fbUserId,
+      accessToken: longLiveAccessToken,
+      adAccounts,
+      information: {
+        name,
+        picture,
+      },
+    })
+    createNotification(
+      {
+        title: `Account connection updated`,
+        message: 'Connect to facebook successfully!',
+      },
+      [user.id]
+    )
+  } catch (err) {
+    debug.log(REDIS_NAMESPACE, err)
+  }
 }
 
 export const updateConnectToGoogle = async (data) => {
-  const { googleAdAccounts, user, userId, information, token } = data
-  /**
-   * The data will be in shape
-   * {
-   *  7508956962 (logged in user): [
-   *   {
-   *    descriptive_name: "Test 1"
-   *    id: 2609064194
-   *    logged_in_customer_id: "7508956962"
-   *    resource_name: "customers/7508956962/customerClients/2609064194"
-   *   }
-   *  ]
-   * }
-   *
-   * => Turn to shape
-   * [
-   *  {
-   *    descriptive_name: "Test 1"
-   *    id: 2609064194
-   *    logged_in_customer_id: "7508956962"
-   *    resource_name: "customers/7508956962/customerClients/2609064194"
-   *   }
-   * ]
-   */
-  let adAccounts = []
-  Object.values(googleAdAccounts).forEach((value) => {
-    adAccounts = adAccounts.concat(value)
-  })
+  try {
+    const { googleAdAccounts, user, userId, information, token } = data
+    /**
+     * The data will be in shape
+     * {
+     *  7508956962 (logged in user): [
+     *   {
+     *    descriptive_name: "Test 1"
+     *    id: 2609064194
+     *    logged_in_customer_id: "7508956962"
+     *    resource_name: "customers/7508956962/customerClients/2609064194"
+     *   }
+     *  ]
+     * }
+     *
+     * => Turn to shape
+     * [
+     *  {
+     *    descriptive_name: "Test 1"
+     *    id: 2609064194
+     *    logged_in_customer_id: "7508956962"
+     *    resource_name: "customers/7508956962/customerClients/2609064194"
+     *   }
+     * ]
+     */
+    let adAccounts = []
+    Object.values(googleAdAccounts).forEach((value) => {
+      adAccounts = adAccounts.concat(value)
+    })
 
-  await userService.connectToGoogle(user.id, {
-    userId,
-    idToken: get(token, 'id_token'),
-    refreshToken: get(token, 'refresh_token'),
-    adAccounts,
-    information,
-  })
+    await userService.connectToGoogle(user.id, {
+      userId,
+      idToken: get(token, 'id_token'),
+      refreshToken: get(token, 'refresh_token'),
+      adAccounts,
+      information,
+    })
+
+    createNotification(
+      {
+        title: `Account connection updated`,
+        message: 'Connect to google successfully!',
+      },
+      [user.id]
+    )
+  } catch (err) {
+    debug.log(REDIS_NAMESPACE, err)
+  }
 }
