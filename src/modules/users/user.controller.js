@@ -119,7 +119,6 @@ export const reconnectToFacebook = async (req, res) => {
       res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
     }
   }
-  res.status(StatusCodes.OK).json({ message: MESSAGE.CONNECT_SUCCESSFULLY })
 }
 
 export const disconnectGoogle = async (req, res) => {
