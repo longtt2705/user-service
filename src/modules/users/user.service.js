@@ -1,3 +1,5 @@
+import axios from 'axios'
+import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
 import isEmpty from 'lodash/isEmpty'
 import db from 'src/models'
@@ -5,7 +7,6 @@ import { MESSAGE } from 'src/shared/message'
 import { ACCOUNT_STATUS, ROLE } from 'src/utils/constants'
 import { hashPassword } from 'src/utils/crypto'
 import debug from 'src/utils/debug'
-import axios from 'axios'
 
 const NAMESPACE = 'user-service'
 
@@ -167,4 +168,22 @@ export const disconnectGoogle = async (userId) => {
 
 export const disconnectFacebook = async (userId) => {
   return db.User.update({ facebookConnection: null }, { where: { id: userId } })
+}
+
+export const getFacebookConnection = async (user) => {
+  const { facebookConnection } = user
+  const response = await axios.get(`${process.env.FACEBOOK_API_URL}/me`, {
+    params: { access_token: facebookConnection.accessToken },
+  })
+  return response
+}
+
+export const getGoogleConnection = async (user) => {
+  const { googleConnection } = user
+  const { CLIENT_ID, CLIENT_SECRET } = process.env
+  const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET)
+  // Use refresh token to generate a access token to check if refresh token expired
+  // const tmpAccessToken = await client.refreshToken(googleConnection.refreshToken)
+  // If success, revoke the token
+  // await client.revokeToken(tmpAccessToken.tokens.access_token)
 }

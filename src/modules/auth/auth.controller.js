@@ -2,10 +2,13 @@ import httpStatusCodes, { StatusCodes } from 'http-status-codes'
 import jwt from 'jsonwebtoken'
 import isEmpty from 'lodash/isEmpty'
 import passport from 'passport'
+import * as authService from 'src/modules/auth/auth.service'
 import * as userService from 'src/modules/users/user.service'
 import { MESSAGE } from 'src/shared/message'
 import debug from 'src/utils/debug'
 import { sendMailWithHtml } from 'src/utils/mailer'
+
+const NAMESPACE = 'AUTH-CTRL'
 
 export async function register(req, res) {
   const userInfo = { ...req.body }
@@ -83,6 +86,48 @@ export const refreshToken = (req, res) => {
   res.status(401).json({ message: MESSAGE.BAD_REQUEST_BODY })
 }
 
+export const loginWithFacebook = async (req, res) => {
+  const { accessToken } = req.body
+  try {
+    const user = await authService.loginWithFacebook(accessToken)
+    if (isEmpty(user)) {
+      throw new Error('Empty user')
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    return res.json({
+      success: true,
+      message: 'authentication succeeded',
+      token,
+      user,
+    })
+  } catch (err) {
+    debug.log('Login With Facebook', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: 'Login with facebook failed.' })
+  }
+}
+
+export const loginWithGoogle = async (req, res) => {
+  const { code } = req.body
+  try {
+    const user = await authService.loginWithGoogle(code)
+    if (isEmpty(user)) {
+      throw new Error('Empty user')
+    }
+
+    const loginToken = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    return res.json({
+      success: true,
+      message: 'authentication succeeded',
+      token: loginToken,
+      user,
+    })
+  } catch (err) {
+    debug.log('Login With Google', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: 'Login with google failed.' })
+  }
+}
+
 export default {
   register,
   login,
@@ -90,4 +135,6 @@ export default {
   forgotPassword,
   resetPassword,
   refreshToken,
+  loginWithFacebook,
+  loginWithGoogle,
 }

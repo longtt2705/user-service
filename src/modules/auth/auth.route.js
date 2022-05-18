@@ -7,6 +7,8 @@ import { validate } from 'src/validator'
 const router = Router()
 
 router.post('/register', userRegisterRules(), validate, authCtrl.register)
+router.post('/login/facebook', authCtrl.loginWithFacebook)
+router.post('/login/google', authCtrl.loginWithGoogle)
 router.post('/login', authCtrl.login)
 router.get('/me', auth(), authCtrl.getUserInfo)
 router.post('/refresh-token', authCtrl.refreshToken)

@@ -1,5 +1,6 @@
-import debug from './debug'
 import bcrypt from 'bcrypt'
+import debug from './debug'
+const Crypto = require('crypto')
 
 const saltRounds = 10
 
@@ -15,4 +16,8 @@ export async function checkPassword(plainPassword, hash) {
     debug.log('Hash', err)
   })
   return result
+}
+
+export function randomString(size = 21) {
+  return Crypto.randomBytes(size).toString('base64').slice(0, size)
 }
