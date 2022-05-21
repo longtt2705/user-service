@@ -109,6 +109,29 @@ export const connectToFacebook = async (req, res) => {
   }
 }
 
+export const reconnectToFacebook = async (req, res) => {
+  const { user } = req
+  const { accessToken, userID: fbUserId, name, picture } = req.body
+
+  // Check if same facebook user with previous connection
+  const {
+    facebookConnection: { userId: existFbUserId },
+  } = user
+  if (existFbUserId !== fbUserId) {
+    // TODO: Remove all campaign, ad group, ad connect with previous account
+  } else {
+    try {
+      const longLiveAccessToken = await userService.getFacebookLongLiveAccessToken(accessToken)
+      sendUpdateConnectToFacebook({ fbUserId, longLiveAccessToken, name, picture, user })
+
+      return res.status(StatusCodes.OK).json({ message: MESSAGE.CONNECT_SUCCESSFULLY })
+    } catch (err) {
+      debug.log('Connect-Facebook-Account', err)
+      res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
+    }
+  }
+}
+
 export const disconnectGoogle = async (req, res) => {
   const user = req.user
 
@@ -123,10 +146,36 @@ export const disconnectGoogle = async (req, res) => {
 export const disconnectFacebook = async (req, res) => {
   const user = req.user
 
+  // TODO: Remove all campaign, ad group, ad connect with facebook account
+  debug.log('Disconnect-Facebook-Account', 'Remove ads connect with facebook account')
+
   await userService.disconnectFacebook(user.id).catch((err) => {
     debug.log('Disconnect-Facebook-Account', err)
     res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
   })
 
   res.status(StatusCodes.OK).json({ message: 'disconnect facebook account successfully.' })
+}
+
+export const getFacebookConnection = async (req, res) => {
+  const user = req.user
+  try {
+    await userService.getFacebookConnection(user)
+  } catch (err) {
+    debug.log('Get-Facebook-Connection', err)
+    return res.status(StatusCodes.BAD_REQUEST).send(err)
+  }
+
+  return res.status(StatusCodes.OK).send()
+}
+
+export const getGoogleConnection = async (req, res) => {
+  const user = req.user
+  try {
+    await userService.getGoogleConnection(user)
+  } catch (err) {
+    debug.log('Get-Google-Connection', err)
+    return res.status(StatusCodes.BAD_REQUEST).send(err)
+  }
+  return res.status(StatusCodes.OK).send()
 }
