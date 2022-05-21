@@ -23,6 +23,17 @@ export const deleteUser = async (req, res) => {
   }
 }
 
+export const restoreUser = async (req, res) => {
+  const { userId } = req.params
+  try {
+    const result = await userService.restoreUser(userId)
+    return res.json(result)
+  } catch (err) {
+    debug.log('restore user', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.UPDATE_FAILED })
+  }
+}
+
 export const updateUser = async (req, res) => {
   const { userId } = req.params
   const userInfo = { ...req.body }

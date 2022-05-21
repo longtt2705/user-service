@@ -6,10 +6,11 @@ import { ACCOUNT_STATUS, ROLE } from 'src/utils/constants'
 import { hashPassword } from 'src/utils/crypto'
 import debug from 'src/utils/debug'
 import axios from 'axios'
+import { generateRuleNotifcationTemplate, sendMailWithHtml } from 'src/utils/mailer'
 
 const NAMESPACE = 'user-service'
 
-export const createUser = async (userInfo) => {
+export const createUser = async (userInfo, isAdmin = false) => {
   const { email, username, password, firstName, lastName, phone } = userInfo
   const errors = {}
 
@@ -44,7 +45,7 @@ export const createUser = async (userInfo) => {
     firstName,
     lastName,
     phone,
-    role: ROLE.USER,
+    role: isAdmin ? userInfo.role : ROLE.USER,
     // TODO: Change to PENDING when need to verify email
     status: ACCOUNT_STATUS.ACTIVE,
   })
@@ -57,11 +58,26 @@ export const getUserById = (id) => {
 }
 
 export const getAll = () => {
-  return db.User.findAll({}, { raw: true })
+  return db.User.findAll({ paranoid: false }, { raw: true })
 }
 
 export const deleteUser = (userId) => {
-  return db.User.destroy({ where: { id: userId } })
+  return updateUser(userId, { deletedAt: new Date(), status: ACCOUNT_STATUS.DELETED })
+}
+
+export const getEmailById = async (id) => {
+  const user = await db.User.findByPk(id, {
+    attributes: ['email'],
+    raw: true,
+  })
+  return user.email
+}
+
+export const restoreUser = (userId) => {
+  return db.User.update(
+    { deletedAt: null, status: ACCOUNT_STATUS.ACTIVE },
+    { where: { id: userId }, paranoid: false }
+  )
 }
 
 export const getUserByEmail = (email) => {
@@ -167,4 +183,15 @@ export const disconnectGoogle = async (userId) => {
 
 export const disconnectFacebook = async (userId) => {
   return db.User.update({ facebookConnection: null }, { where: { id: userId } })
+}
+
+export const sendRuleNotiEmailToUserById = async (id, payload) => {
+  const origin = process.env.DEFAULT_CLIENT_HOST || ''
+  const { title, message, campaignId } = payload
+  const url = `${origin}/dashboard/ad-management/edit?campaignIds[]=${campaignId}`
+
+  const html = generateRuleNotifcationTemplate(title, message, url)
+  const email = await getEmailById(id)
+
+  return sendMailWithHtml(title, email, html)
 }

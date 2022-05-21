@@ -6,4 +6,5 @@ export const ROLE = {
 export const ACCOUNT_STATUS = {
   PENDING: 'PENDING',
   ACTIVE: 'ACTIVE',
+  DELETED: 'DELETED',
 }

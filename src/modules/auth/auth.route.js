@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { auth } from './auth.middleware'
 import authCtrl from './auth.controller'
+import adminRoute from '../admin/route'
 import { resetPasswordRules, userRegisterRules } from './auth.validation'
 import { validate } from 'src/validator'
 
 const router = Router()
 
+router.use('/admin', adminRoute)
 router.post('/register', userRegisterRules(), validate, authCtrl.register)
 router.post('/login', authCtrl.login)
 router.get('/me', auth(), authCtrl.getUserInfo)

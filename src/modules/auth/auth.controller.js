@@ -1,6 +1,7 @@
 import httpStatusCodes, { StatusCodes } from 'http-status-codes'
 import jwt from 'jsonwebtoken'
 import isEmpty from 'lodash/isEmpty'
+import isNil from 'lodash/isNil'
 import passport from 'passport'
 import * as userService from 'src/modules/users/user.service'
 import { MESSAGE } from 'src/shared/message'
@@ -9,7 +10,8 @@ import { sendMailWithHtml } from 'src/utils/mailer'
 
 export async function register(req, res) {
   const userInfo = { ...req.body }
-  const [user, errors] = await userService.createUser(userInfo)
+  const admin = req.user
+  const [user, errors] = await userService.createUser(userInfo, !isNil(admin))
   if (!isEmpty(errors)) {
     return res.status(httpStatusCodes.BAD_REQUEST).json({ success: false, errors })
   }

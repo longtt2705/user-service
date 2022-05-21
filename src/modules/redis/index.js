@@ -1,5 +1,6 @@
 import { Consumer, Message, Producer } from 'redis-smq'
 import { initAdConsumers } from './ads-service'
+import { initEmailConsumer } from './email-service'
 
 export const consumer = new Consumer()
 export const producer = new Producer()
@@ -10,7 +11,7 @@ export const createMessage = (channel, type, data) =>
 
 export const initQueue = () => {
   initAdConsumers()
-
+  initEmailConsumer()
   consumer.run()
 }
 
