@@ -135,7 +135,6 @@ export const reconnectToGoogle = async (req, res) => {
   const { user } = req
   const { code } = req.body
 
-  // Check if same google user with previous connection
   const {
     googleConnection: { userId: existGoogleUserId },
   } = user
