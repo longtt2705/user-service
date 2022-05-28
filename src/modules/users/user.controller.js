@@ -119,16 +119,49 @@ export const reconnectToFacebook = async (req, res) => {
   } = user
   if (existFbUserId !== fbUserId) {
     // TODO: Remove all campaign, ad group, ad connect with previous account
-  } else {
-    try {
-      const longLiveAccessToken = await userService.getFacebookLongLiveAccessToken(accessToken)
-      sendUpdateConnectToFacebook({ fbUserId, longLiveAccessToken, name, picture, user })
+  }
+  try {
+    const longLiveAccessToken = await userService.getFacebookLongLiveAccessToken(accessToken)
+    sendUpdateConnectToFacebook({ fbUserId, longLiveAccessToken, name, picture, user })
 
-      return res.status(StatusCodes.OK).json({ message: MESSAGE.CONNECT_SUCCESSFULLY })
-    } catch (err) {
-      debug.log('Connect-Facebook-Account', err)
-      res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
+    return res.status(StatusCodes.OK).json({ message: MESSAGE.CONNECT_SUCCESSFULLY })
+  } catch (err) {
+    debug.log('Connect-Facebook-Account', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
+  }
+}
+
+export const reconnectToGoogle = async (req, res) => {
+  const { user } = req
+  const { code } = req.body
+
+  // Check if same google user with previous connection
+  const {
+    googleConnection: { userId: existGoogleUserId },
+  } = user
+  try {
+    const { CLIENT_ID, CLIENT_SECRET } = process.env
+    const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET)
+    const token = await userService.getTokenByCode(code)
+    const ticket = await client.verifyIdToken({
+      idToken: get(token, 'id_token'),
+      audience: process.env.CLIENT_ID,
+    })
+
+    if (existGoogleUserId !== ticket.getUserId()) {
+      // TODO: Remove all campaign, ad group, ad connect with previous account
     }
+    sendUpdateConnectToGoogle({
+      token,
+      userId: ticket.getUserId(),
+      user: req.user,
+      information: ticket.getPayload(),
+    })
+
+    return res.status(StatusCodes.OK).json({ message: MESSAGE.CONNECT_SUCCESSFULLY })
+  } catch (err) {
+    debug.log('Connect-Google-Account', err)
+    res.status(StatusCodes.BAD_REQUEST).json({ message: MESSAGE.CONNECT_FAILED })
   }
 }
 

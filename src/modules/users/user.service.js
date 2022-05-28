@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { OAuth2Client } from 'google-auth-library'
+import { GoogleAdsApi } from 'google-ads-api'
 import jwt from 'jsonwebtoken'
 import isEmpty from 'lodash/isEmpty'
 import db from 'src/models'
@@ -206,11 +206,30 @@ export const getFacebookConnection = async (user) => {
 }
 
 export const getGoogleConnection = async (user) => {
+  // perform an google API call to check refresh token
   const { googleConnection } = user
-  const { CLIENT_ID, CLIENT_SECRET } = process.env
-  const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET)
-  // Use refresh token to generate a access token to check if refresh token expired
-  // const tmpAccessToken = await client.refreshToken(googleConnection.refreshToken)
-  // If success, revoke the token
-  // await client.revokeToken(tmpAccessToken.tokens.access_token)
+  const client = new GoogleAdsApi({
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    developer_token: process.env.DEVELOPER_TOKEN,
+  })
+  const adAccount = googleConnection.adAccounts[0]
+
+  try {
+    const refreshToken = googleConnection.refreshToken
+
+    const customer = client.Customer({
+      customer_id: adAccount.id,
+      refresh_token: refreshToken,
+      login_customer_id: adAccount.logged_in_customer_id,
+    })
+    await customer.report({
+      entity: 'campaign',
+      attributes: ['campaign.id'],
+      limit: 1,
+    })
+  } catch (err) {
+    debug.log(NAMESPACE, err)
+    throw err
+  }
 }
