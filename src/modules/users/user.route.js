@@ -22,6 +22,7 @@ router.post('/connect/facebook', userController.connectToFacebook)
 router.post('/disconnect/google', userController.disconnectGoogle)
 router.post('/disconnect/facebook', userController.disconnectFacebook)
 router.post('/reconnect/facebook', userController.reconnectToFacebook)
+router.post('/reconnect/google', userController.reconnectToGoogle)
 router.post('/', checkPermission(ROLE.ADMIN), authController.register)
 
 export default router
