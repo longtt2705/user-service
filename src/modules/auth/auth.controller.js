@@ -8,6 +8,7 @@ import * as userService from 'src/modules/users/user.service'
 import { MESSAGE } from 'src/shared/message'
 import debug from 'src/utils/debug'
 import { sendMailWithHtml } from 'src/utils/mailer'
+import db from 'src/models'
 
 const NAMESPACE = 'AUTH-CTRL'
 
@@ -32,15 +33,18 @@ export async function login(req, res, next) {
         message: 'Incorrect username or password',
       })
     }
-    req.logIn(user, { session: false }, (loginErr) => {
+    req.logIn(user, { session: false }, async (loginErr) => {
       if (loginErr) {
         return next(loginErr)
       }
       const token = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+      const refreshToken = await db.RefreshToken.createToken(user)
+
       return res.json({
         success: true,
         message: 'authentication succeeded',
-        token,
+        accessToken: token,
+        refreshToken,
         user,
       })
     })
@@ -84,8 +88,36 @@ export const resetPassword = async (req, res) => {
   }
 }
 
-export const refreshToken = (req, res) => {
-  res.status(401).json({ message: MESSAGE.BAD_REQUEST_BODY })
+export const refreshToken = async (req, res) => {
+  const { refreshToken: requestToken } = req.body
+  if (requestToken == null) {
+    return res.status(StatusCodes.FORBIDDEN).json({ message: 'Refresh Token is required!' })
+  }
+  try {
+    let refreshToken = await db.RefreshToken.findOne({ where: { token: requestToken } })
+    if (!refreshToken) {
+      res.status(StatusCodes.FORBIDDEN).json({ message: 'Refresh token is not in database!' })
+      return
+    }
+    if (db.RefreshToken.verifyExpiration(refreshToken)) {
+      db.RefreshToken.destroy({ where: { id: refreshToken.id } })
+
+      res.status(StatusCodes.FORBIDDEN).json({
+        message: 'Refresh token was expired. Please make a new signin request',
+      })
+      return
+    }
+    const user = await refreshToken.getUser()
+    const newAccessToken = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+
+    return res.json({
+      accessToken: newAccessToken,
+      refreshToken: refreshToken.token,
+    })
+  } catch (err) {
+    debug.log(NAMESPACE, err)
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: MESSAGE.BAD_REQUEST_BODY })
+  }
 }
 
 export const loginWithFacebook = async (req, res) => {
@@ -97,11 +129,14 @@ export const loginWithFacebook = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    const refreshToken = await db.RefreshToken.createToken(user)
+
     return res.json({
       success: true,
       message: 'authentication succeeded',
-      token,
+      accessToken: token,
       user,
+      refreshToken,
     })
   } catch (err) {
     debug.log('Login With Facebook', err)
@@ -118,11 +153,14 @@ export const loginWithGoogle = async (req, res) => {
     }
 
     const loginToken = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    const refreshToken = await db.RefreshToken.createToken(user)
+
     return res.json({
       success: true,
       message: 'authentication succeeded',
-      token: loginToken,
+      accessToken: loginToken,
       user,
+      refreshToken,
     })
   } catch (err) {
     debug.log('Login With Google', err)

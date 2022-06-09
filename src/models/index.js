@@ -37,6 +37,15 @@ fs.readdirSync(__dirname)
     db[model.name] = model
   })
 
+db.RefreshToken.belongsTo(db.User, {
+  foreignKey: 'userId',
+  targetKey: 'id',
+})
+db.User.hasOne(db.RefreshToken, {
+  foreignKey: 'userId',
+  targetKey: 'id',
+})
+
 db.sequelize = sequelize
 db.Sequelize = Sequelize
 
