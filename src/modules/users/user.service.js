@@ -50,8 +50,7 @@ export const createUser = async (userInfo, isAdmin = false) => {
     // TODO: Change to PENDING when need to verify email
     status: ACCOUNT_STATUS.ACTIVE,
   })
-
-  return [user, null]
+  return [user.get({ plain: true })[0], null]
 }
 
 export const getUserById = (id) => {
