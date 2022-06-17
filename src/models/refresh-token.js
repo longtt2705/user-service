@@ -1,12 +1,12 @@
 import { v4 } from 'uuid'
+import jwt from 'jsonwebtoken'
 
 const config = {
-  secret: 'bezkoder-secret-key',
-  //   jwtExpiration: 3600, // 1 hour
-  //   jwtRefreshExpiration: 86400, // 24 hours
+  jwtExpiration: 3600, // 1 hour
+  jwtRefreshExpiration: 86400, // 24 hours
   /* for test */
-  jwtExpiration: 60, // 1 minute
-  jwtRefreshExpiration: 120, // 2 minutes
+  // jwtExpiration: 60, // 1 minute
+  // jwtRefreshExpiration: 120, // 2 minutes
 }
 
 export default (sequelize, Sequelize) => {
@@ -35,6 +35,12 @@ export default (sequelize, Sequelize) => {
   }
   RefreshToken.verifyExpiration = (token) => {
     return token.expiryDate.getTime() < new Date().getTime()
+  }
+
+  RefreshToken.createAccessToken = (userId) => {
+    return jwt.sign({ userId }, process.env.SECRET || 'meomeo', {
+      expiresIn: config.jwtExpiration,
+    })
   }
   return RefreshToken
 }

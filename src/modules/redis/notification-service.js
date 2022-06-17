@@ -13,6 +13,7 @@ export const createNotification = async (data, subscribers) => {
       createNotiMessage(QUEUE_NAME.NOTIFICATIONS_QUEUE, {
         data,
         subscribers,
+        mailing: true,
       }),
       (err) => {
         if (err) throw err

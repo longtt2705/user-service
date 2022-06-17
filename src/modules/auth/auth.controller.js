@@ -1,5 +1,4 @@
 import httpStatusCodes, { StatusCodes } from 'http-status-codes'
-import jwt from 'jsonwebtoken'
 import isEmpty from 'lodash/isEmpty'
 import isNil from 'lodash/isNil'
 import passport from 'passport'
@@ -37,7 +36,7 @@ export async function login(req, res, next) {
       if (loginErr) {
         return next(loginErr)
       }
-      const token = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+      const token = db.RefreshToken.createAccessToken(user.id)
       const refreshToken = await db.RefreshToken.createToken(user)
 
       return res.json({
@@ -108,7 +107,7 @@ export const refreshToken = async (req, res) => {
       return
     }
     const user = await refreshToken.getUser()
-    const newAccessToken = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    const newAccessToken = db.RefreshToken.createAccessToken(user.id)
 
     return res.json({
       accessToken: newAccessToken,
@@ -128,7 +127,7 @@ export const loginWithFacebook = async (req, res) => {
       throw new Error('Empty user')
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    const token = db.RefreshToken.createAccessToken(user.id)
     const refreshToken = await db.RefreshToken.createToken(user)
 
     return res.json({
@@ -152,7 +151,7 @@ export const loginWithGoogle = async (req, res) => {
       throw new Error('Empty user')
     }
 
-    const loginToken = jwt.sign({ userId: user.id }, process.env.SECRET || 'meomeo')
+    const loginToken = db.RefreshToken.createAccessToken(user.id)
     const refreshToken = await db.RefreshToken.createToken(user)
 
     return res.json({

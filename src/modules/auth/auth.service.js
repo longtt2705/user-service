@@ -44,7 +44,6 @@ export const loginWithGoogle = async (ggLoginCode) => {
       username: email,
       password: randomString(),
     })
-    console.log(user)
   }
   return user
 }
